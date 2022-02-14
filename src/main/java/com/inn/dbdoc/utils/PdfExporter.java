@@ -2,11 +2,13 @@ package com.inn.dbdoc.utils;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.tomcat.util.http.fileupload.ByteArrayOutputStream;
 
 import com.inn.dbdoc.entity.DbTable;
 import com.inn.dbdoc.entity.DbTableRow;
+import com.inn.dbdoc.enums.Size;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
@@ -37,6 +39,9 @@ public class PdfExporter {
 
 	public static void writeValuesInPdf(List<DbTable> allDbTables) throws DocumentException {
 		for (DbTable dbTable : allDbTables) {
+			
+			Size tableColumnsMaxSize = TableInsight.getTableColumnsMaxSize(dbTable);
+			
 			PdfPTable table = new PdfPTable(7);
 
 			Font boldFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
@@ -57,7 +62,7 @@ public class PdfExporter {
 			document.add(tableDesc);
 			document.add(lineBreak);
 
-			writeHeader(table);
+			writeHeader(table, tableColumnsMaxSize);
 
 			for (DbTableRow dbTableRow : dbTable.getTableRows()) {
 				writeTableData(dbTableRow, table);
@@ -67,9 +72,22 @@ public class PdfExporter {
 		}
 	}
 
-	public static void writeHeader(PdfPTable table) throws DocumentException {
+	public static void writeHeader(PdfPTable table, Size tableColumnsMaxSize) throws DocumentException {
 		table.setWidthPercentage(100);
-		table.setWidths(new int[] { 18, 5, 3, 2, 3, 6, 9 });
+		
+		if(Objects.equals(tableColumnsMaxSize, Size.OUT_OF_RANGE)) {
+			table.setWidths(new int[] { 18, 5, 3, 2, 3, 6, 9 });
+		} else if(Objects.equals(tableColumnsMaxSize, Size.EXTRA_LARGE)) {
+			table.setWidths(new int[] { 18, 5, 3, 2, 3, 6, 9 });
+		} else if(Objects.equals(tableColumnsMaxSize, Size.LARGE)) {
+			table.setWidths(new int[] { 15, 5, 3, 2, 3, 6, 12 });
+		} else if(Objects.equals(tableColumnsMaxSize, Size.MEDIUM)) {
+			table.setWidths(new int[] { 10, 5, 3, 2, 3, 6, 17 });
+		} else if(Objects.equals(tableColumnsMaxSize, Size.SMALL)) {
+			table.setWidths(new int[] { 6, 5, 3, 2, 3, 6, 21 });
+		} else if(Objects.equals(tableColumnsMaxSize, Size.EXTRA_SMALL)) {
+			table.setWidths(new int[] { 4, 5, 3, 2, 3, 6, 23 });
+		}
 
 		Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD);
 		headFont.setSize(7.1f);
@@ -148,7 +166,7 @@ public class PdfExporter {
 
 		cell = new PdfPCell(new Phrase(dbTableRow.getComment(), dataFont));
 		cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-		cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+		cell.setHorizontalAlignment(Element.ALIGN_LEFT);
 		cell.setPaddingRight(5);
 		table.addCell(cell);
 
